@@ -1,47 +1,78 @@
--- Fund Master Table
-CREATE TABLE IF NOT EXISTS fund_master (
+-- =====================================
+-- DIMENSION TABLES
+-- =====================================
+
+CREATE TABLE dim_fund (
     amfi_code INTEGER PRIMARY KEY,
-    fund_house TEXT,
     scheme_name TEXT,
+    fund_house TEXT,
     category TEXT,
     sub_category TEXT,
     plan TEXT,
-    launch_date TEXT,
-    benchmark TEXT,
-    expense_ratio_pct REAL,
-    exit_load_pct REAL,
-    min_sip_amount REAL,
-    min_lumpsum_amount REAL,
-    fund_manager TEXT,
-    risk_category TEXT,
-    sebi_category_code TEXT
+    risk_category TEXT
 );
 
--- NAV History Table
-CREATE TABLE IF NOT EXISTS nav_history (
+CREATE TABLE dim_date (
+    date_id INTEGER PRIMARY KEY,
+    full_date DATE,
+    year INTEGER,
+    quarter INTEGER,
+    month INTEGER,
+    day INTEGER
+);
+
+-- =====================================
+-- FACT TABLES
+-- =====================================
+
+CREATE TABLE fact_nav (
+    nav_id INTEGER PRIMARY KEY AUTOINCREMENT,
     amfi_code INTEGER,
-    date TEXT,
+    date_id INTEGER,
     nav REAL,
-    PRIMARY KEY (amfi_code, date)
+
+    FOREIGN KEY (amfi_code)
+        REFERENCES dim_fund(amfi_code),
+
+    FOREIGN KEY (date_id)
+        REFERENCES dim_date(date_id)
 );
 
--- AUM Table
-CREATE TABLE IF NOT EXISTS aum_by_fund_house (
-    fund_house TEXT,
-    date TEXT,
-    aum_cr REAL
+CREATE TABLE fact_transactions (
+    transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    investor_id TEXT,
+    amfi_code INTEGER,
+    date_id INTEGER,
+    transaction_type TEXT,
+    amount_inr REAL,
+    state TEXT,
+
+    FOREIGN KEY (amfi_code)
+        REFERENCES dim_fund(amfi_code),
+
+    FOREIGN KEY (date_id)
+        REFERENCES dim_date(date_id)
 );
 
--- SIP Inflows
-CREATE TABLE IF NOT EXISTS monthly_sip_inflows (
-    fund_house TEXT,
-    month TEXT,
-    inflow_cr REAL
+CREATE TABLE fact_performance (
+    performance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    amfi_code INTEGER,
+    return_1yr_pct REAL,
+    return_3yr_pct REAL,
+    return_5yr_pct REAL,
+    alpha REAL,
+    beta REAL,
+    sharpe_ratio REAL,
+
+    FOREIGN KEY (amfi_code)
+        REFERENCES dim_fund(amfi_code)
 );
 
--- Category Inflows
-CREATE TABLE IF NOT EXISTS category_inflows (
-    category TEXT,
-    month TEXT,
-    inflow_cr REAL
+CREATE TABLE fact_aum (
+    aum_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    amfi_code INTEGER,
+    aum_crore REAL,
+
+    FOREIGN KEY (amfi_code)
+        REFERENCES dim_fund(amfi_code)
 );
